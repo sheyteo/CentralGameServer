@@ -1,10 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <../asio/include/asio.hpp>
+#include "asio/include/asio.hpp"
 
 #define MaxUdpPacketSize 512
-
+#define UdpPacketHeader 8
 
 
 class Message
