@@ -45,7 +45,7 @@ class S_Message
 	MessageHeader* msgHeader{};
 	std::vector<char> message;
 public:
-	void setData(std::vector<char> data, Importance importance, Priority priority)
+	void setData(std::vector<char> data, Importance importance = Importance::High_Importance, Priority priority = Priority::High_Priotity)
 	{
 		unsigned int datasize = data.size();
 		message.resize(datasize + sizeof(MessageHeader));
@@ -86,6 +86,11 @@ class R_Message
 public:
 	void parse(const std::vector<char>& rawMessage) // posibility of performing move semantics to omit use of memcpy/ shared_ptr also posible
 	{
+		if (rawMessage.size() == 0)
+		{
+			return;
+		}
+
 		if(rawMessage.size()<sizeof(MessageHeader))
 		{
 			throw std::exception("Wrong Message Recieve in R_Message::parse()");
@@ -198,11 +203,11 @@ private:
 		std::shared_ptr<asio::ip::udp::endpoint> clientEndpoint)
 	{
 		std::cout << "Msg from " << clientEndpoint->address().to_string()
-			<<":" << clientEndpoint->port()<<"\n"<<"Msg-Content :"
-			<< std::string(buffer.data(),bytes_transferred) << "\n";
+			<<":" << clientEndpoint->port()<<"\n"<<"Msg-Size :"
+			<< bytes_transferred << "\n";
 
 		std::shared_ptr<R_Message> msg(new R_Message());
-		msg->parse(buffer);
+		msg->parse(std::vector(buffer.begin(), buffer.begin() + bytes_transferred));
 
 		if (ClientHandleMap.contains(*clientEndpoint))
 		{
@@ -212,6 +217,10 @@ private:
 		{
 			std::shared_ptr<ClientHandle> cH(new ClientHandle(*clientEndpoint));
 			cH->recieve(msg);
+
+			std::shared_ptr<S_Message> msg(new S_Message);
+			msg->setData({ 'a','b','c' });
+			cH->addNewMessage(msg);
 			ClientHandleMap.insert(std::pair(*clientEndpoint, cH));
 		}
 		recieve();
