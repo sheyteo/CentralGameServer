@@ -149,7 +149,7 @@ private:
 			auto it = val->recieveHandle.mmap.begin();
 			while (it != val->recieveHandle.mmap.end())
 			{
-				if (std::chrono::steady_clock::now() - it->second->timepoint > 20s) //discard messages older than 20 seconds
+				if (std::chrono::steady_clock::now() - it->second->timepoint > 100s) //discard messages older than 20 seconds
 				{
 					if (it->second->ValidIterator) // checks wether the message was already deleted
 					{

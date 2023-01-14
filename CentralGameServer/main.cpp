@@ -7,9 +7,28 @@
 #include "Testing.h"
 #include "ServiceHub.h"
 
+void bindToServiceHub(ClientHandle* clientHandle)
+{
+	ClientHandle::RedirectHandler loginHandle;
+	loginHandle.function = Login;
+	clientHandle->registerRedirectFunction(100, loginHandle);
+
+	ClientHandle::RedirectHandler registerHandle;
+	registerHandle.function = Register;
+	clientHandle->registerRedirectFunction(102, registerHandle);
+}
+
 int main()
 {
-	Custom_Message cm;
+	ServiceHub::load("");
+	std::shared_ptr< Server> server(new Server);
+	server->start(1);
+	while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(5));
+		ServiceHub::save();
+	}
+	/*Custom_Message cm;
 	cm.push_back("abcdef");
 	cm.push_back(1);
 	cm.push_back("abcdefg");
@@ -18,7 +37,7 @@ int main()
 	std::string result = cv.read_str();
 	uint32_t result1 = cv.read_uint32();
 	std::string result2 = cv.read_str();
-	std::cout << result2 << "\n";
+	std::cout << result2 << "\n";*/
 	/*ServiceHub service;
 	service.load("UserData.json");
 	auto b = service.user_register("abbas", "7891");

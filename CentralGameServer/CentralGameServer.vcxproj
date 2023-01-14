@@ -20,19 +20,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ClientHandle.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Messages.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientHandle.h" />
     <ClInclude Include="Messages.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="RedirectFunctions.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="ServiceHub.h" />
     <ClInclude Include="Testing.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cpp.hint" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
