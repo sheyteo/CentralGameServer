@@ -1,0 +1,31 @@
+{
+    "available_games": [
+        {
+            "name": "mario_cart"
+        },
+        {
+            "name": "uno"
+        }
+    ],
+    "users": [
+        {
+            "data": {},
+            "password": "123",
+            "username": "sheyteo"
+        },
+        {
+            "data": {},
+            "password": "456",
+            "username": "max"
+        },
+        {
+            "data": {},
+            "password": "7891",
+            "username": "abbas"
+        }
+    ],
+    "version": {
+        "mayor": 1,
+        "minor": 0
+    }
+}
