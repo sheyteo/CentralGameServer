@@ -22,14 +22,22 @@
   <ItemGroup>
     <ClCompile Include="ClientHandle.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Messages.cpp" />
+    <ClCompile Include="NewClientHandle.cpp" />
+    <ClCompile Include="Message.cpp" />
+    <ClCompile Include="NewServer.cpp" />
+    <ClCompile Include="RedirectHub.cpp" />
+    <ClCompile Include="ServiceHub.cpp" />
+    <ClCompile Include="TaskExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientHandle.h" />
-    <ClInclude Include="Messages.h" />
+    <ClInclude Include="NewClientHandle.h" />
+    <ClInclude Include="Message.h" />
+    <ClInclude Include="NewServer.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Server.h" />
+    <ClInclude Include="RedirectHub.h" />
     <ClInclude Include="ServiceHub.h" />
+    <ClInclude Include="TaskExecutor.h" />
     <ClInclude Include="Testing.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -86,9 +94,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)\CentralGameServer;$(IncludePath)</IncludePath>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\CentralGameServer;$(IncludePath)</IncludePath>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,6 +113,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command> /showInclude</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -121,6 +134,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command> /showInclude</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -135,6 +151,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command> /showInclude</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -153,6 +172,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command> /showInclude</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

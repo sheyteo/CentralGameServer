@@ -2,6 +2,18 @@
 #include "pch.h"
 #include "Messages.h"
 
+struct shared_redirect_memory
+{
+	std::chrono::steady_clock::time_point created{};
+	virtual ~shared_redirect_memory() {};
+};
+
+struct shared_ping_memory : public shared_redirect_memory
+{
+	uint32_t status {};
+	std::chrono::steady_clock::duration elapsed{};
+};
+
 class ClientHandle
 {
 	friend class Server;
@@ -18,7 +30,7 @@ private:
 			std::list<std::shared_ptr<R_Message>>::iterator fastAccess;
 		};
 
-		std::map<unsigned int, std::shared_ptr<t_mmap>> mmap;
+		std::unordered_map<unsigned int, std::shared_ptr<t_mmap>> mmap;
 	};
 
 	class Send
@@ -26,7 +38,7 @@ private:
 	public:
 		mutable std::mutex lock;
 		std::list<std::shared_ptr<S_Message>> messages; // optimisation may be good // Priority is missing partly
-		std::map<unsigned int, std::list<std::shared_ptr<S_Message>>::iterator> mmap;
+		std::unordered_map<unsigned int, std::list<std::shared_ptr<S_Message>>::iterator> mmap;
 
 		mutable std::mutex c_lock;
 		std::list<std::shared_ptr<C_Message>> cMessage;
@@ -35,9 +47,12 @@ public:
 	struct RedirectHandler
 	{
 		std::function<void(ClientHandle*, std::shared_ptr<R_Message>)> function;
-		std::shared_ptr<void> data;
+		std::shared_ptr< std::shared_ptr<shared_redirect_memory>> data;
 	};
 private:
+	bool stopRequest = false;
+	bool valid = true;
+
 	std::unordered_map<uint32_t, RedirectHandler> redirectMap;
 
 	asio::ip::udp::endpoint endpoint;
@@ -47,6 +62,10 @@ private:
 
 public:
 	ClientHandle(const asio::ip::udp::endpoint& endpoint);
+
+	~ClientHandle();
+
+	void cleanUp();
 
 	void bind();
 
@@ -58,8 +77,9 @@ public:
 
 	void removeRedirectFunction(uint32_t redirect_func_id);
 
-	template<class T>
-	T& _getRedirectFunction(uint32_t redirect_func_id);
+	std::shared_ptr<std::shared_ptr<shared_redirect_memory>> _getRedirectMemory(uint32_t redirect_func_id);
+
+	std::function<void(ClientHandle*, std::shared_ptr<R_Message>)> callRedirectFunction(uint32_t redirect_func_id);
 
 	void addNewMessage(std::shared_ptr<S_Message> msg);
 
