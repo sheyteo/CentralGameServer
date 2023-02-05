@@ -164,19 +164,19 @@ Custom_Message::Custom_Message()
 
 }
 
-void Custom_Message::push_back(void* data, size_t bytes)
+void Custom_Message::push_back_void(void* data, size_t bytes)
 {
 	size_t raw_size = raw->size();
 	raw->resize(bytes + raw_size);
 	std::memcpy(raw->data() + raw_size, data, bytes);
 }
-void Custom_Message::push_back(uint32_t num)
+void Custom_Message::push_back_ui32(uint32_t num)
 {
 	size_t raw_size = raw->size();
 	raw->resize(sizeof(num) + raw_size);
 	std::memcpy(raw->data() + raw_size, &num, sizeof(num));
 }
-void Custom_Message::push_back(const std::string& str)
+void Custom_Message::push_back_str(const std::string& str)
 {
 	size_t raw_size = raw->size();
 	uint32_t str_length = str.size();

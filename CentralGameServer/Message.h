@@ -173,9 +173,9 @@ private:
 	std::shared_ptr<std::vector<char>> raw;
 public:
 	Custom_Message();
-	void push_back(void* data, size_t bytes);
-	void push_back(uint32_t num);
-	void push_back(const std::string& str);
+	void push_back_void(void* data, size_t bytes);
+	void push_back_ui32(uint32_t num);
+	void push_back_str(const std::string& str);
 	template<class T>
 	void push_back(const T& obj)
 	{

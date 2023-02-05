@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientHandle.cpp" />
+    <ClCompile Include="GameInstance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NewClientHandle.cpp" />
     <ClCompile Include="Message.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientHandle.h" />
+    <ClInclude Include="GameInstance.h" />
     <ClInclude Include="NewClientHandle.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="NewServer.h" />

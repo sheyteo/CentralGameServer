@@ -367,10 +367,14 @@ void User::_login(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::sh
 
 		//Interaction with Userhub Not implemented yet
 		uint32_t retCode = LR_SUCCESS;
-
+		if (retCode == LR_SUCCESS)
+		{
+			clientHandle->value->userInterface->loged_in = true;
+			clientHandle->value->userInterface->uname = username;
+		}
 		Custom_Message cm;
-		cm.push_back(retCode);
-		cm.push_back(username);
+		cm.push_back_ui32(retCode);
+		cm.push_back_str(username);
 		//cm.push_back(session_token);
 
 		clientHandle->value->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(102, 0, msg->getHeader()->fast_redirect.ClientMemID)));
@@ -388,11 +392,16 @@ void User::_register(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std:
 		//Interaction with Userhub Not implemented yet
 		uint32_t retCode = LR_SUCCESS;
 
-		Custom_Message cm;
-		cm.push_back(retCode);
-		cm.push_back(username);
-		//cm.push_back(session_token);
+		if (retCode == LR_SUCCESS)
+		{
+			clientHandle->value->userInterface->loged_in = true;
+			clientHandle->value->userInterface->uname = username;
+		}
 
+		Custom_Message cm;
+		cm.push_back_ui32(retCode);
+		cm.push_back_str(username);
+		//cm.push_back(session_token);
 
 		clientHandle->value->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(105, 0, msg->getHeader()->fast_redirect.ClientMemID)));
 	}
