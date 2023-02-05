@@ -68,9 +68,6 @@ protected:
     ThreadSafeQueue<std::shared_ptr<Send_Message>> sQueue;
     ThreadSafeQueue<std::shared_ptr<Recv_Message>> rQueue;
 
-
-    uint
-
     virtual void start();
     virtual void stop();
     bool is_stopped();
