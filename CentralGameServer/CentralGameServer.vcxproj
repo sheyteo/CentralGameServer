@@ -41,6 +41,7 @@
     <ClInclude Include="ServiceHub.h" />
     <ClInclude Include="TaskExecutor.h" />
     <ClInclude Include="Testing.h" />
+    <ClInclude Include="ThreadSafeQueue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

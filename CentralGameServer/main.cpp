@@ -56,11 +56,10 @@
 #include "pch.h"
 #include "NewServer.h"
 
-
-
 int main()
 {
 	Server server;
+	server.addGameInstance(17, std::make_shared<GameInstanceBase>());
 	server.start(5,5);
 	while (true)
 	{

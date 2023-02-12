@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "RedirectHub.h"
 #include "TaskExecutor.h"
+#include "ThreadSafeQueue.h"
 
 
 class User
@@ -52,13 +53,13 @@ public:
 class ClientHandle
 {
 	friend class Server;
-private:
-	static uint16_t clientIDCount;
-
+	friend class GameInstanceBase;
 public:
 	const uint32_t this_ID = clientIDCount++;
 	uint8_t connTries = 0;
 private:
+	static uint16_t clientIDCount;
+
 	bool disconnected = false;
 	std::shared_mutex generalMutex;
 	asio::ip::udp::endpoint endpoint;
@@ -99,6 +100,40 @@ private:
 		std::shared_mutex cofirmMutex;
 		std::list<std::shared_ptr<Confirm_Message>> confirmMessages;
 	};
+
+	class GameMsgHandle
+	{
+	private:
+		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue<std::shared_ptr<Recv_Message>>>> gameMessages;
+		std::shared_mutex gLock;
+	public:
+		const std::shared_ptr < ThreadSafeQueue<std::shared_ptr<Recv_Message>>> getHandle(const uint32_t& key)
+		{
+			std::shared_lock sLock(gLock);
+			auto it = gameMessages.find(key);
+			if (it != gameMessages.end())
+			{
+				return it->second;
+				
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+		void add_or_override_Handle(const uint32_t& key)
+		{
+			std::unique_lock uLock(gLock);
+			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue<std::shared_ptr<Recv_Message>>>());
+		}
+		void remove_Handle(const uint32_t& key)
+		{
+			std::unique_lock uLock(gLock);
+			gameMessages.erase(key);
+		}
+	};
+
+	GameMsgHandle gMsgHandle;
 
 	bool valid = true;
 

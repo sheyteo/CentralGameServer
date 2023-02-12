@@ -56,7 +56,7 @@ public:
 		}
 		catch (const std::exception&)
 		{
-			std::cout << "Aome error\n";
+			std::cout << "getMemory error\n";
 			return nullptr;
 		}
 	}
@@ -69,7 +69,7 @@ public:
 		}
 		catch (const std::exception&)
 		{
-			std::cout << "Some error\n";
+			std::cout << "getFunc error\n";
 			return nullptr;
 		}
 	}
@@ -88,7 +88,7 @@ public:
 		}
 		catch (const std::exception&)
 		{
-			std::cout << "WSome error\n";
+			std::cout << "registerRedirect error\n";
 			return;
 		}
 	}

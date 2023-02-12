@@ -29,7 +29,7 @@ const std::vector<char>& Recv_Message::getData() const noexcept
 	return data;
 }
 
-Send_Message::Send_Message(const std::vector<char>& data, Fast_Redirect fast_redirect, Priority priority, Importance importance)
+Send_Message::Send_Message(const std::vector<char>& data, Fast_Redirect fast_redirect, Priority priority, Importance importance, uint32_t gameInstanceID)
 	:completeMsg(data.size() + sizeof(NormalMessageHeader))
 {
 	completeMsg.insert(completeMsg.cbegin() + sizeof(NormalMessageHeader), data.cbegin(), data.cend());
@@ -46,6 +46,8 @@ Send_Message::Send_Message(const std::vector<char>& data, Fast_Redirect fast_red
 
 	P_NMH->fast_redirect = fast_redirect;
 
+	P_NMH->gameInstanceID = gameInstanceID;
+
 	P_NMH->data_size = data.size();
 	P_NMH->creationDate = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 	uint32_t temp_checksum = 0;
@@ -56,19 +58,17 @@ Send_Message::Send_Message(const std::vector<char>& data, Fast_Redirect fast_red
 	P_NMH->checkSum = temp_checksum;
 }
 
-
-
 std::shared_ptr<Send_Message> Send_Message::create(const std::vector<char>& data, Fast_Redirect fast_redirect,
-	Priority priority, Importance importance)
+	Priority priority, Importance importance, uint32_t gameInstanceID)
 {
-	return std::shared_ptr<Send_Message>(new Send_Message(data, fast_redirect, priority, importance));
+	return std::make_shared<Send_Message>(data, fast_redirect, priority, importance, gameInstanceID);
 }
 
 std::shared_ptr<Send_Message> Send_Message::create_from_raw(const std::vector<char>& data)
 {
 	NormalMessageHeader* msg = (NormalMessageHeader*)data.data();
-	return std::shared_ptr<Send_Message>(new Send_Message(std::vector<char>(data.begin() + sizeof(NormalMessageHeader), data.end()),
-		msg->fast_redirect, (Priority)msg->Priority,(Importance)msg->Importance));
+	return std::make_shared<Send_Message>(std::vector<char>(data.begin() + sizeof(NormalMessageHeader), data.end()),
+		msg->fast_redirect, (Priority)msg->Priority,(Importance)msg->Importance,msg->gameInstanceID);
 }
 
 std::shared_ptr<std::vector<char>> Send_Message::getRaw()

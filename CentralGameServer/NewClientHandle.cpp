@@ -87,24 +87,50 @@ void ClientHandle::addRecvMessage(std::shared_ptr<Recv_Message> msg)
 		//throw custom exception
 	}
 
-	std::unique_lock ul1(confirmHandle.cofirmMutex);
-	auto b = new Confirm_Message(msg);
-	auto x = std::shared_ptr<Confirm_Message>(b);
-	confirmHandle.confirmMessages.push_back(x);
+	{
+		std::unique_lock ul1(confirmHandle.cofirmMutex);
+		confirmHandle.confirmMessages.push_back(std::make_shared<Confirm_Message>(msg));
+	}
 
 	std::unique_lock ul(recvHandle.recvMutex);
 
 	if (!recvHandle.recvMessageMap.contains(msg->getHeader()->ID))
 	{
-		RedirectFunction rFunc = RedirectHub::getFunc(this_ID, msg->getHeader()->fast_redirect.funcID);
-		if (rFunc != nullptr)
+		if (msg->getHeader()->gameInstanceID != 0 && msg->getHeader()->fast_redirect.funcID != 0)
 		{
-			RecvHandle::RecvStruct rs;
-			rs.ValidIterator = false;
-			rs.timepoint = std::chrono::steady_clock::now();
-			recvHandle.recvMessageMap.emplace(msg->getHeader()->ID, rs);
-			TaskExecutor::addTask(std::bind(rFunc, sptr_this, std::move(msg)));
-			return;
+			//error handling missing
+			std::cout << "Undefined behaviour\n";
+		}
+		else if(msg->getHeader()->gameInstanceID != 0)
+		{
+			auto temp = gMsgHandle.getHandle(msg->getHeader()->gameInstanceID);
+			if (temp)
+			{
+				temp->push(msg);
+			}
+			else
+			{
+				std::cout << "Potential Error: Unregistered MsgQueue\n";
+			}
+		}
+		else if (msg->getHeader()->fast_redirect.funcID != 0)
+		{
+			RedirectFunction rFunc = RedirectHub::getFunc(this_ID, msg->getHeader()->fast_redirect.funcID);
+
+			if (rFunc != nullptr)
+			{
+				RecvHandle::RecvStruct rs;
+				rs.ValidIterator = false;
+				rs.timepoint = std::chrono::steady_clock::now();
+				recvHandle.recvMessageMap.emplace(msg->getHeader()->ID, rs);
+				TaskExecutor::addTask(std::bind(rFunc, sptr_this, std::move(msg)));
+			}
+			else
+			{
+				std::cout << "Potential Error: Unregisterd Redirect-Function\n";
+				auto it = recvHandle.recvMessages.insert(recvHandle.recvMessages.end(), msg);
+				recvHandle.recvMessageMap.emplace(msg->getHeader()->ID, RecvHandle::createRecvStruct(it, true));
+			}
 		}
 		else
 		{
@@ -347,6 +373,19 @@ void ClientHandle::bind()
 		}
 		return (uint64_t)0;
 		}));
+
+	RedirectHub::registerRedirect(this_ID,150,
+		std::function([](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
+			if (clientHandle->valid)
+			{
+				clientHandle->value->userInterface->_login(clientHandle, msg);
+			}
+			else
+			{
+				std::cout << "150 Erro Handling still Missing\n";
+			}
+	return (uint64_t)0;
+			}));
 }
 
 void ClientHandle::disconnect()

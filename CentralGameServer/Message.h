@@ -85,6 +85,7 @@ struct NormalMessageHeader
 	uint8_t Importance;
 	uint32_t data_size;
 	uint32_t checkSum;
+	uint32_t gameInstanceID;
 	Fast_Redirect fast_redirect;
 };
 
@@ -114,12 +115,12 @@ private:
 
 public:
 	Send_Message(const std::vector<char>& data, Fast_Redirect fast_redirect = Fast_Redirect{},
-		Priority priority = Priority::High_Priotity, Importance importance = Importance::High_Importance);
+		Priority priority = Priority::High_Priotity, Importance importance = Importance::High_Importance, uint32_t gameInstanceID = 0);
 
 	static std::shared_ptr<Send_Message> create_from_raw(const std::vector<char>& data);
 
 	static std::shared_ptr<Send_Message> create(const std::vector<char>& data, Fast_Redirect fast_redirect = Fast_Redirect{},
-		Priority priority = Priority::High_Priotity, Importance importance = Importance::High_Importance);
+		Priority priority = Priority::High_Priotity, Importance importance = Importance::High_Importance, uint32_t gameInstanceID = 0);
 
 	std::shared_ptr<std::vector<char>> getRaw();
 

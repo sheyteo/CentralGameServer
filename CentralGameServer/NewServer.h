@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "NewClientHandle.h"
+#include "GameInstance.h"
 
 class Server
 {
@@ -46,7 +46,7 @@ public:
 	Server();
 	~Server();
 
-	void start(uint8_t num_threads = 1, uint8_t executor_num_threads=1);
+	void start(uint8_t num_threads = 1, uint8_t executor_num_threads = 1);
 	void shutdown();
 
 	bool isActive();
