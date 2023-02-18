@@ -59,8 +59,19 @@
 int main()
 {
 	Server server;
-	server.addGameInstance(17, std::make_shared<GameInstanceBase>());
+	GameInstanceSection::addGameInstance(17, std::make_shared<GameInstanceBase>());
 	server.start(5,5);
+	std::this_thread::sleep_for(5s);
+	if (auto gi = GameInstanceSection::getGameInstance(17))
+	{
+		gi->start();
+		std::cout << "Started GameInstance\n";
+	}
+	else
+	{
+		std::cout << "Couldnt start GameInstance\n";
+	}
+	
 	while (true)
 	{
 		std::this_thread::sleep_for(100ms);

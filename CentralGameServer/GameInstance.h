@@ -1,22 +1,30 @@
 #pragma once
+#ifndef GAMEINSTANCE_H
+#define GAMEINSTANCE_H
 #include "pch.h"
 #include "NewClientHandle.h"
 
 struct GameInstanceInfo
 {
-    std::string GameName;
-    uint32_t ID;
-    uint16_t PlayerNum;
+    std::string GameName = "NAME";
+    uint32_t ID = counter++;
+    uint16_t PlayerNum = 0;
+	static uint32_t counter;
 };
+
 
 class GameInstanceBase
 {
-    std::unordered_map<uint32_t,std::shared_ptr<ClientHandle>> clHandle;
+    std::unordered_map<uint32_t,std::weak_ptr<ClientHandle>> clHandle;
     std::shared_mutex clHandleMutex;
     GameInstanceInfo gInfo;
+	std::unique_ptr<std::thread> mainThread;
+
+	void _start();
+
 public:
     void start();
-    void addCl(std::shared_ptr<ClientHandle>);
+    void addCl(std::weak_ptr<ClientHandle>);
     void removeCl(const uint32_t&);
 };
 
@@ -50,3 +58,4 @@ public:
 		}
 	}
 };
+#endif

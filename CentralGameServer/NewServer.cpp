@@ -253,7 +253,8 @@ void Server::recieveCallback(const asio::error_code& error, std::size_t bytes_tr
 			//ignore old messages
 			if (clh == nullptr)
 			{
-				std::shared_ptr<ClientHandle> cH(new ClientHandle(*clientEndpoint));
+				std::shared_ptr<ClientHandle> cH = std::make_shared<ClientHandle>(*clientEndpoint);
+				cH->setShared(cH);
 				cH->addRecvMessage(msg);
 				clms.addClientHandle(*clientEndpoint, cH);
 			}

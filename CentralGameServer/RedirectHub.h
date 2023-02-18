@@ -5,7 +5,7 @@
 #include "TaskExecutor.h"
 
 class ClientHandle;
-typedef std::function<uint64_t(std::shared_ptr<ExtentPtr<ClientHandle>>, std::shared_ptr<Recv_Message>)> RedirectFunction;
+typedef std::function<uint64_t(std::weak_ptr<ClientHandle>, std::shared_ptr<Recv_Message>)> RedirectFunction;
 
 struct RedirectMemoryBase
 {
@@ -36,6 +36,14 @@ enum LoginRegisterStatus
 	LR_INAVLID_CREDENTIALS = 3,
 	LR_USERNAME_ALREADY_USED = 4,
 	LR_INVALID_INPUT = 5
+};
+
+enum CC_GI_Status
+{
+	CC_GI_SUCCES = 0,
+	CC_GI_FAIL = 1,
+	CC_GI_STILL_RUNNING = 2,
+	CC_GI_NO_SUCH_GI = 3,
 };
 
 template<typename T>

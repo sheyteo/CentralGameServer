@@ -32,7 +32,7 @@ const std::vector<char>& Recv_Message::getData() const noexcept
 Send_Message::Send_Message(const std::vector<char>& data, Fast_Redirect fast_redirect, Priority priority, Importance importance, uint32_t gameInstanceID)
 	:completeMsg(data.size() + sizeof(NormalMessageHeader))
 {
-	completeMsg.insert(completeMsg.cbegin() + sizeof(NormalMessageHeader), data.cbegin(), data.cend());
+	std::memcpy(completeMsg.data() + sizeof(NormalMessageHeader), data.data(), data.size());
 
 	P_NMH = (NormalMessageHeader*)completeMsg.data();
 

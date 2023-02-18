@@ -1,8 +1,13 @@
 #pragma once
+#ifndef CLIENTHANDLE_H
+#define CLIENTHANDLE_H
+
+
 #include "pch.h"
 #include "RedirectHub.h"
 #include "TaskExecutor.h"
 #include "ThreadSafeQueue.h"
+#include "GameInstance.h"
 
 
 class User
@@ -11,15 +16,15 @@ class User
 	std::string uname;
 	bool loged_in = false;
 
-	std::shared_ptr<ExtentPtr<ClientHandle>> clHandle;
+	std::weak_ptr<ClientHandle> weakClientHandle;
 
 public:
-	User(std::shared_ptr<ExtentPtr<ClientHandle>> clHandle);
+	User(std::weak_ptr<ClientHandle> weakClientHandle);
 	uint64_t ping(std::chrono::milliseconds* ms);
-	void _login(std::shared_ptr<ExtentPtr<ClientHandle>>,std::shared_ptr<Recv_Message>);
-	void _register(std::shared_ptr<ExtentPtr<ClientHandle>>, std::shared_ptr<Recv_Message>);
-	void _disconnect(std::shared_ptr<ExtentPtr<ClientHandle>>, std::shared_ptr<Recv_Message>);
-	void _fetch_info(std::shared_ptr<ExtentPtr<ClientHandle>>, std::shared_ptr<Recv_Message>);
+	void _login(std::weak_ptr<ClientHandle> weakClientHandle,std::shared_ptr<Recv_Message>);
+	void _register(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
+	void _disconnect(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
+	void _fetch_info(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
 };
 
 class UserHub
@@ -104,17 +109,16 @@ private:
 	class GameMsgHandle
 	{
 	private:
-		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue<std::shared_ptr<Recv_Message>>>> gameMessages;
+		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue1<std::shared_ptr<Recv_Message>>>> gameMessages;
 		std::shared_mutex gLock;
 	public:
-		const std::shared_ptr < ThreadSafeQueue<std::shared_ptr<Recv_Message>>> getHandle(const uint32_t& key)
+		const std::shared_ptr < ThreadSafeQueue1<std::shared_ptr<Recv_Message>>> getHandle(const uint32_t& key)
 		{
 			std::shared_lock sLock(gLock);
 			auto it = gameMessages.find(key);
 			if (it != gameMessages.end())
 			{
 				return it->second;
-				
 			}
 			else
 			{
@@ -124,7 +128,7 @@ private:
 		void add_or_override_Handle(const uint32_t& key)
 		{
 			std::unique_lock uLock(gLock);
-			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue<std::shared_ptr<Recv_Message>>>());
+			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue1<std::shared_ptr<Recv_Message>>>());
 		}
 		void remove_Handle(const uint32_t& key)
 		{
@@ -137,7 +141,7 @@ private:
 
 	bool valid = true;
 
-	std::shared_ptr<ExtentPtr<ClientHandle>> sptr_this;
+	std::weak_ptr<ClientHandle> weak_this;
 
 	SendHandle sendHandle;
 	RecvHandle recvHandle;
@@ -148,6 +152,8 @@ private:
 
 public:
 	ClientHandle(const asio::ip::udp::endpoint& endpoint);
+
+	void setShared(std::shared_ptr<ClientHandle>);
 
 	void disconnect();
 
@@ -177,6 +183,7 @@ public:
 
 	~ClientHandle();
 
-	//TODO some error handling + add support for new version on client side
+	//TODO some error handling
 	//keep mutex lifetime in mind
 };
+#endif 

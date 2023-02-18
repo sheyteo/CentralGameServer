@@ -3,6 +3,44 @@
 #include "pch.h"
 
 template <typename T>
+class ThreadSafeQueue1
+{
+public:
+
+    void push(const T& value)
+    {
+        std::lock_guard lg(mtx);
+        list.push_front(value);
+    }
+
+    std::unique_ptr<T> pop()
+    {
+        std::lock_guard lg(mtx);
+        if (!list.empty())
+        {
+            auto temp = std::make_unique<T>(list.back());
+            list.pop_back();
+            return temp;
+        }
+        else
+        {
+            return 0;
+        }
+        
+    }
+
+    size_t getSize() const noexcept
+    {
+        std::lock_guard lg(mtx);
+        return list.size();
+    }
+
+private:
+    std::list<T> list;
+    std::mutex mtx;
+};
+
+template <typename T>
 class ThreadSafeQueue {
 public:
     ThreadSafeQueue()

@@ -1,7 +1,7 @@
 #include "NewClientHandle.h"
 
-User::User(std::shared_ptr<ExtentPtr<ClientHandle>> clHandle)
-	:clHandle(clHandle)
+User::User(std::weak_ptr<ClientHandle> weakClientHandle)
+	:weakClientHandle(weakClientHandle)
 {
 
 }
@@ -51,14 +51,18 @@ ClientHandle::RecvHandle::RecvStruct ClientHandle::RecvHandle::createRecvStruct(
 ClientHandle::ClientHandle(const asio::ip::udp::endpoint& endpoint)
 	:endpoint(endpoint)
 {
-	sptr_this = ExtentPtr<ClientHandle>::create(this);
-	userInterface = std::make_shared<User>(sptr_this);
 	bind();
 	if (valid)
 	{
 		//TaskExecutor::addTask(std::bind(RedirectHub::getFunc(this_ID, 21), sptr_this, nullptr)); //adding keep alive
 	}
 
+}
+
+void ClientHandle::setShared(std::shared_ptr<ClientHandle> sharedPtr)
+{
+	weak_this = sharedPtr;
+	userInterface = std::make_shared<User>(weak_this);
 }
 
 void ClientHandle::addSendMessage(std::shared_ptr<Send_Message> smsg)
@@ -96,6 +100,11 @@ void ClientHandle::addRecvMessage(std::shared_ptr<Recv_Message> msg)
 
 	if (!recvHandle.recvMessageMap.contains(msg->getHeader()->ID))
 	{
+		RecvHandle::RecvStruct rs;
+		rs.ValidIterator = false;
+		rs.timepoint = std::chrono::steady_clock::now();
+		recvHandle.recvMessageMap.emplace(msg->getHeader()->ID, rs);
+
 		if (msg->getHeader()->gameInstanceID != 0 && msg->getHeader()->fast_redirect.funcID != 0)
 		{
 			//error handling missing
@@ -103,6 +112,7 @@ void ClientHandle::addRecvMessage(std::shared_ptr<Recv_Message> msg)
 		}
 		else if(msg->getHeader()->gameInstanceID != 0)
 		{
+			std::cout << msg->getHeader()->gameInstanceID << "\n";
 			auto temp = gMsgHandle.getHandle(msg->getHeader()->gameInstanceID);
 			if (temp)
 			{
@@ -119,11 +129,7 @@ void ClientHandle::addRecvMessage(std::shared_ptr<Recv_Message> msg)
 
 			if (rFunc != nullptr)
 			{
-				RecvHandle::RecvStruct rs;
-				rs.ValidIterator = false;
-				rs.timepoint = std::chrono::steady_clock::now();
-				recvHandle.recvMessageMap.emplace(msg->getHeader()->ID, rs);
-				TaskExecutor::addTask(std::bind(rFunc, sptr_this, std::move(msg)));
+				TaskExecutor::addTask(std::bind(rFunc, weak_this, std::move(msg)));
 			}
 			else
 			{
@@ -272,8 +278,6 @@ void ClientHandle::tempCleanUp()
 
 ClientHandle::~ClientHandle()
 {
-	sptr_this->valid = false;
-	sptr_this->value = nullptr;
 	cleanUp();
 }
 
@@ -283,25 +287,30 @@ void ClientHandle::bind()
 {
 	//Send Ping
 	RedirectHub::registerRedirect(this_ID, 25,
-		[](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
-			if (clientHandle->valid)
+		[](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			auto clientHandle = weakClientHandle.lock();
+			if (clientHandle)
 			{
 				auto mem = RedirectHub::allocRedirectMemory<PingMemory>(10s);
 				mem.second->status = P_STILL_RUNNING;
 				mem.second->start_time = std::chrono::steady_clock::now();
-				clientHandle->value->addSendMessage(Send_Message::create({}, Fast_Redirect::create(28, mem.first, 0)));
+				clientHandle->addSendMessage(Send_Message::create({}, Fast_Redirect::create(28, mem.first, 0)));
 				return mem.first;
 			}
-	return (uint64_t)0;
+			else
+			{
+				return (uint64_t)0;
+			}
 		});
 
 	//recv send hello
 	RedirectHub::registerRedirect(this_ID, 6,
-		[](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
-			if (clientHandle->valid)
+		[](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			auto clientHandle = weakClientHandle.lock();
+			if (clientHandle)
 			{
-				clientHandle->value->addSendMessage(Send_Message::create({}, Fast_Redirect::create(7, 0,
-					msg->getHeader()->fast_redirect.ClientMemID),High_Priotity,Ensured_Importance));
+				clientHandle->addSendMessage(Send_Message::create({}, Fast_Redirect::create(7, 0,
+					msg->getHeader()->fast_redirect.ClientMemID), High_Priotity, Ensured_Importance));
 				return (uint64_t)0;
 			}
 			else
@@ -310,50 +319,54 @@ void ClientHandle::bind()
 			}
 		});
 
+	//disconnect
 	RedirectHub::registerRedirect(this_ID, 9,
-		[](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
-			if (clientHandle->valid)
+		[](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			auto clientHandle = weakClientHandle.lock();
+			if (clientHandle)
 			{
-				clientHandle->value->disconnect();
+				clientHandle->disconnect();
 			}
 			return (uint64_t)0;
 		});
 
 	//recieve sended ping
 	RedirectHub::registerRedirect(this_ID, 29,
-		[](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
+		[](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
 			std::shared_ptr<PingMemory> memory = RedirectHub::getMemory<PingMemory>(msg->getHeader()->fast_redirect.ServerMemID);
-	memory->elapsed = std::chrono::steady_clock::now() - memory->start_time;
-	memory->bytes_transfered = msg->getData().size() + sizeof(NormalMessageHeader);
-	memory->status = P_SUCCES;
-	return (uint64_t)0;
+			memory->elapsed = std::chrono::steady_clock::now() - memory->start_time;
+			memory->bytes_transfered = msg->getData().size() + sizeof(NormalMessageHeader);
+			memory->status = P_SUCCES;
+			return (uint64_t)0;
 		});
 
 	//recieve Ping
-	RedirectHub::registerRedirect(this_ID, 27, std::function([](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg)
+	RedirectHub::registerRedirect(this_ID, 27, std::function([](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 		{
-			if (clientHandle->valid)
+			auto clientHandle = weakClientHandle.lock();
+			if (clientHandle)
 			{
-				clientHandle->value->addSendMessage(Send_Message::create(msg->getData(), Fast_Redirect::create(30, 0, msg->getHeader()->fast_redirect.ClientMemID)));
+				clientHandle->addSendMessage(Send_Message::create(msg->getData(), Fast_Redirect::create(30, 0, msg->getHeader()->fast_redirect.ClientMemID)));
 			}
 			else
 			{
 				std::cout << "27 ClientHandle invalid Error handling missing\n";
 			}
-	return (uint64_t)0;
+			return (uint64_t)0;
 		}));
 
 	//recv + send keep alive
 	RedirectHub::registerRedirect(this_ID, 21,
-		[](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg)
+		[](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 		{
-			TaskExecutor::addAsyncTask(std::bind(std::function([clientHandle]()
+			TaskExecutor::addAsyncTask(std::bind(std::function([weakClientHandle]()
 			{
 				std::cout << "keep alive\n";
-				if (clientHandle->valid)
+				auto clientHandle = weakClientHandle.lock();
+				if (clientHandle)
 				{
-					clientHandle->value->addSendMessage(Send_Message::create({}, Fast_Redirect::create(3, 0, 0), High_Priotity, High_Importance));
-					TaskExecutor::addTask(std::bind(RedirectHub::getFunc(clientHandle->value->this_ID, 21), clientHandle, nullptr));
+					clientHandle->addSendMessage(Send_Message::create({}, Fast_Redirect::create(3, 0, 0), High_Priotity, High_Importance));
+					TaskExecutor::addTask(std::bind(RedirectHub::getFunc(clientHandle->this_ID, 21), clientHandle, nullptr));
 				}
 				return (uint64_t)0;
 			})), 2s);
@@ -362,43 +375,97 @@ void ClientHandle::bind()
 
 	//rec + send login
 	RedirectHub::registerRedirect(this_ID, 101,
-		std::function([](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
-		if (clientHandle->valid)
+		std::function([](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 		{
-			clientHandle->value->userInterface->_login(clientHandle, msg);
-		}
-		else
-		{	
-			std::cout << "101 Erro Handling still Missing\n";
-		}
-		return (uint64_t)0;
+			if (auto clientHandle = weakClientHandle.lock())
+			{
+				clientHandle->userInterface->_login(clientHandle, msg);
+			}
+			else
+			{	
+				std::cout << "101 Erro Handling still Missing\n";
+			}
+			return (uint64_t)0;
 		}));
 
-	RedirectHub::registerRedirect(this_ID,150,
-		std::function([](std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg) {
-			if (clientHandle->valid)
+	RedirectHub::registerRedirect(this_ID, 104,
+		std::function([](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			if (auto clientHandle = weakClientHandle.lock())
 			{
-				clientHandle->value->userInterface->_login(clientHandle, msg);
+				clientHandle->userInterface->_register(clientHandle, msg);
+			}
+			else
+			{
+				std::cout << "104 Erro Handling still Missing\n";
+			}
+			return (uint64_t)0;
+		}));
+
+	RedirectHub::registerRedirect(this_ID, 130,
+		std::function([](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			if (auto clientHandle = weakClientHandle.lock())
+			{
+				Custom_Message_View cmv(msg->getData());
+
+				uint32_t GameInstanceID = cmv.read_uint32();
+
+				auto GameInstancePtr = GameInstanceSection::getGameInstance(GameInstanceID);
+
+				uint32_t returnCode = CC_GI_SUCCES;
+
+				if (!GameInstancePtr)
+				{
+					std::cout << "NO SUCH CC_GI\n";
+					returnCode = CC_GI_NO_SUCH_GI;
+				}
+				else
+				{
+					if (GameInstanceID == 0)
+					{
+						std::cout << "STOP\n";
+					}
+					GameInstancePtr->addCl(weakClientHandle);
+				}
+
+				Custom_Message cm;
+				cm.push_back_ui32(returnCode);
+				clientHandle->addSendMessage(std::make_shared<Send_Message>(*cm.getRaw(), Fast_Redirect::create(131, 0, msg->getHeader()->fast_redirect.ClientMemID)));
+			}
+			else
+			{
+				std::cout << "130 Erro Handling still Missing\n";
+			}
+			return (uint64_t)0;
+			}));
+
+	RedirectHub::registerRedirect(this_ID,150,
+		std::function([](std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg) {
+			if (auto clientHandle = weakClientHandle.lock())
+			{
+				std::cout << *(uint32_t*)msg->getData().data() << "aa\n";
+				if (auto e = GameInstanceSection::getGameInstance(*(uint32_t*)msg->getData().data()))
+				{
+					e->addCl(clientHandle);
+				}
 			}
 			else
 			{
 				std::cout << "150 Erro Handling still Missing\n";
 			}
-	return (uint64_t)0;
-			}));
+			return (uint64_t)0;
+		}));
 }
 
 void ClientHandle::disconnect()
 {
-	sptr_this->valid = false;
 	valid = false;
 	disconnected = true;
 	RedirectHub::removerRedirectFuncs(this_ID);
 }
 
-void User::_login(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg)
+void User::_login(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 {
-	if (clientHandle->valid)
+	if (auto clientHandle = weakClientHandle.lock())
 	{
 		Custom_Message_View cmv(msg->getData());
 		std::string username = cmv.read_str();
@@ -408,21 +475,21 @@ void User::_login(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::sh
 		uint32_t retCode = LR_SUCCESS;
 		if (retCode == LR_SUCCESS)
 		{
-			clientHandle->value->userInterface->loged_in = true;
-			clientHandle->value->userInterface->uname = username;
+			clientHandle->userInterface->loged_in = true;
+			clientHandle->userInterface->uname = username;
 		}
 		Custom_Message cm;
 		cm.push_back_ui32(retCode);
 		cm.push_back_str(username);
 		//cm.push_back(session_token);
 
-		clientHandle->value->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(102, 0, msg->getHeader()->fast_redirect.ClientMemID)));
+		clientHandle->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(102, 0, msg->getHeader()->fast_redirect.ClientMemID)));
 	}
 }
 
-void User::_register(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg)
+void User::_register(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 {
-	if (clientHandle->valid)
+	if (auto clientHandle = weakClientHandle.lock())
 	{
 		Custom_Message_View cmv(msg->getData());
 		std::string username = cmv.read_str();
@@ -433,8 +500,8 @@ void User::_register(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std:
 
 		if (retCode == LR_SUCCESS)
 		{
-			clientHandle->value->userInterface->loged_in = true;
-			clientHandle->value->userInterface->uname = username;
+			clientHandle->userInterface->loged_in = true;
+			clientHandle->userInterface->uname = username;
 		}
 
 		Custom_Message cm;
@@ -442,11 +509,11 @@ void User::_register(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std:
 		cm.push_back_str(username);
 		//cm.push_back(session_token);
 
-		clientHandle->value->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(105, 0, msg->getHeader()->fast_redirect.ClientMemID)));
+		clientHandle->addSendMessage(Send_Message::create(*cm.getRaw(), Fast_Redirect::create(105, 0, msg->getHeader()->fast_redirect.ClientMemID)));
 	}
 }
 
-void User::_disconnect(std::shared_ptr<ExtentPtr<ClientHandle>> clientHandle, std::shared_ptr<Recv_Message> msg)
+void User::_disconnect(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 {
 	//remove from OnlineUSers
 }
@@ -456,7 +523,7 @@ uint64_t User::ping(std::chrono::milliseconds* ms)
 	return 0;
 }
 
-void User::_fetch_info(std::shared_ptr<ExtentPtr<ClientHandle>>, std::shared_ptr<Recv_Message>)
+void User::_fetch_info(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>)
 {
 	return;
 }
