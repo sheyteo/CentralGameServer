@@ -4,6 +4,7 @@ void GameInstanceBase::start()
 {
 	mainThread.reset(new std::thread(&GameInstanceBase::_start,this));
 	running = true;
+	
 }
 
 void GameInstanceBase::stop()
@@ -29,6 +30,8 @@ void GameInstanceBase::_start()
 		std::cout << "clHandleSize: " << clHandle.size() << "\n";
 	}
 	running = false;
+	//this->clHandle.at(0).lock()->gMsgHandle.getHandle(17)->pop(); recv
+	//this->clHandle.at(0).lock()->addSendMessage(smsg); send
 }
 
 void GameInstanceBase::_stop()

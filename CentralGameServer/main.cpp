@@ -65,14 +65,22 @@ private:
 		while (true)
 		{
 			std::this_thread::sleep_for(2s);
-			std::cout << "Checking\n";
 			std::shared_lock sl(clHandleMutex);
 			for (auto& [id,cl] : clHandle)
 			{
 				if (auto t = cl.lock())
 				{
 					t->addSendMessage(Send_Message::create({'H','E','L','L','O'}, Fast_Redirect{}, High_Priotity, Ensured_Importance, 17));
+					if (auto m = t->gMsgHandle.getHandle(17)->pop())
+					{
+						for (auto& c : m->getData())
+						{
+							std::cout << c;
+						}
+					};
 				}
+				//this->clHandle.at(0).lock()->gMsgHandle.getHandle(17)->pop(); recv
+				//this->clHandle.at(0).lock()->addSendMessage(smsg); send
 			}
 		}
 		

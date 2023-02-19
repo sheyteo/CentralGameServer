@@ -59,6 +59,7 @@ class ClientHandle
 {
 	friend class Server;
 	friend class GameInstanceBase;
+	friend class QuizGame;
 public:
 	const uint32_t this_ID = clientIDCount++;
 	uint8_t connTries = 0;
@@ -109,10 +110,10 @@ private:
 	class GameMsgHandle
 	{
 	private:
-		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue1<std::shared_ptr<Recv_Message>>>> gameMessages;
+		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue<Recv_Message>>> gameMessages;
 		std::shared_mutex gLock;
 	public:
-		const std::shared_ptr < ThreadSafeQueue1<std::shared_ptr<Recv_Message>>> getHandle(const uint32_t& key)
+		const std::shared_ptr < ThreadSafeQueue<Recv_Message>> getHandle(const uint32_t& key)
 		{
 			std::shared_lock sLock(gLock);
 			auto it = gameMessages.find(key);
@@ -128,7 +129,7 @@ private:
 		void add_or_override_Handle(const uint32_t& key)
 		{
 			std::unique_lock uLock(gLock);
-			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue1<std::shared_ptr<Recv_Message>>>());
+			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue<Recv_Message>>());
 		}
 		void remove_Handle(const uint32_t& key)
 		{
