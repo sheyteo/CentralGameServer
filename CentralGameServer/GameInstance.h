@@ -15,15 +15,24 @@ struct GameInstanceInfo
 
 class GameInstanceBase
 {
+protected:
     std::unordered_map<uint32_t,std::weak_ptr<ClientHandle>> clHandle;
     std::shared_mutex clHandleMutex;
     GameInstanceInfo gInfo;
 	std::unique_ptr<std::thread> mainThread;
 
-	void _start();
+	bool stopRequest = false;
+	bool running = false;
+
+	virtual void _start();
+	virtual void _stop();
+
+	virtual ~GameInstanceBase() {}
 
 public:
-    void start();
+	void start();
+	void stop();
+	void waitStop();
     void addCl(std::weak_ptr<ClientHandle>);
     void removeCl(const uint32_t&);
 };

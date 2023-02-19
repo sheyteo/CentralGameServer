@@ -3,28 +3,37 @@
 void GameInstanceBase::start()
 {
 	mainThread.reset(new std::thread(&GameInstanceBase::_start,this));
+	running = true;
+}
+
+void GameInstanceBase::stop()
+{
+	_stop();
+}
+
+void GameInstanceBase::waitStop()
+{
+	while (running)
+	{
+		std::this_thread::sleep_for(10ms);
+	}
 }
 
 void GameInstanceBase::_start()
 {
-	while (true)
+	std::cout << "Base GameInstance launched\n";
+	while (!stopRequest)
 	{
 		std::this_thread::sleep_for(1s);
 		std::shared_lock sl(clHandleMutex);
 		std::cout << "clHandleSize: " << clHandle.size() << "\n";
-		for (auto& cl : clHandle)
-		{
-			if (auto sptr = cl.second.lock())
-			{
-				std::cout << sptr->this_ID << "\n";
-			}
-			else
-			{
-				std::cout << "Invalid clientHandlePtr\n";
-			}
-
-		}
 	}
+	running = false;
+}
+
+void GameInstanceBase::_stop()
+{
+	stopRequest = true;
 }
 
 void GameInstanceBase::addCl(std::weak_ptr<ClientHandle> WeakClientHandle)

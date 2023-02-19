@@ -56,10 +56,33 @@
 #include "pch.h"
 #include "NewServer.h"
 
+class QuizGame : public GameInstanceBase
+{
+private:
+	void _start()
+	{
+		std::cout << "Hello we are starting Quizgame\n";
+		while (true)
+		{
+			std::this_thread::sleep_for(2s);
+			std::cout << "Checking\n";
+			std::shared_lock sl(clHandleMutex);
+			for (auto& [id,cl] : clHandle)
+			{
+				if (auto t = cl.lock())
+				{
+					t->addSendMessage(Send_Message::create({'H','E','L','L','O'}, Fast_Redirect{}, High_Priotity, Ensured_Importance, 17));
+				}
+			}
+		}
+		
+	}
+};
+
 int main()
 {
 	Server server;
-	GameInstanceSection::addGameInstance(17, std::make_shared<GameInstanceBase>());
+	GameInstanceSection::addGameInstance(17, std::make_shared<QuizGame>());
 	server.start(5,5);
 	std::this_thread::sleep_for(5s);
 	if (auto gi = GameInstanceSection::getGameInstance(17))
