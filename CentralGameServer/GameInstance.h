@@ -2,7 +2,7 @@
 #ifndef GAMEINSTANCE_H
 #define GAMEINSTANCE_H
 #include "pch.h"
-#include "NewClientHandle.h"
+#include "ClientHandle.h"
 
 struct GameInstanceInfo
 {

@@ -20,22 +20,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientHandle.cpp" />
     <ClCompile Include="GameInstance.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="NewClientHandle.cpp" />
+    <ClCompile Include="ClientHandle.cpp" />
     <ClCompile Include="Message.cpp" />
-    <ClCompile Include="NewServer.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="RedirectHub.cpp" />
     <ClCompile Include="ServiceHub.cpp" />
     <ClCompile Include="TaskExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientHandle.h" />
     <ClInclude Include="GameInstance.h" />
-    <ClInclude Include="NewClientHandle.h" />
+    <ClInclude Include="ClientHandle.h" />
     <ClInclude Include="Message.h" />
-    <ClInclude Include="NewServer.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RedirectHub.h" />
     <ClInclude Include="ServiceHub.h" />

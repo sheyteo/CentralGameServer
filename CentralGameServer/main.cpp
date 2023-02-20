@@ -1,8 +1,6 @@
 // CentralLinuxServer.cpp : Defines the entry point for the application.
 //
 //#include "pch.h"
-//#include "Messages.h"
-//#include "ClientHandle.h"
 //#include "Server.h"
 //#include "Testing.h"
 //#include "ServiceHub.h"
@@ -54,7 +52,7 @@
 //}
 
 #include "pch.h"
-#include "NewServer.h"
+#include "Server.h"
 
 struct QuestionStruct
 {
@@ -64,7 +62,7 @@ struct QuestionStruct
 	std::array<std::string, 3> wrongAwnsers;
 };
 
-class QuizGame : public GameInstanceBase
+class QuizGame1 : public GameInstanceBase
 {
 	std::list<QuestionStruct> questions;
 private:
@@ -138,7 +136,7 @@ private:
 int main()
 {
 	Server server;
-	GameInstanceSection::addGameInstance(17, std::make_shared<QuizGame>());
+	GameInstanceSection::addGameInstance(17, std::make_shared<QuizGame1>());
 	server.start(5,5);
 	std::this_thread::sleep_for(5s);
 	if (auto gi = GameInstanceSection::getGameInstance(17))

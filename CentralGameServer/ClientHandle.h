@@ -1,87 +1,174 @@
 #pragma once
-#include "pch.h"
-#include "Messages.h"
+#ifndef CLIENTHANDLE_H
+#define CLIENTHANDLE_H
 
-struct shared_redirect_memory
+
+#include "pch.h"
+#include "RedirectHub.h"
+#include "TaskExecutor.h"
+#include "ThreadSafeQueue.h"
+#include "GameInstance.h"
+
+
+class User
 {
-	std::chrono::steady_clock::time_point created{};
-	virtual ~shared_redirect_memory() {};
+	bool valid = true;
+	std::string uname;
+	bool loged_in = false;
+
+	std::weak_ptr<ClientHandle> weakClientHandle;
+
+public:
+	User(std::weak_ptr<ClientHandle> weakClientHandle);
+	uint64_t ping(std::chrono::milliseconds* ms);
+	void _login(std::weak_ptr<ClientHandle> weakClientHandle,std::shared_ptr<Recv_Message>);
+	void _register(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
+	void _disconnect(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
+	void _fetch_info(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
 };
 
-struct shared_ping_memory : public shared_redirect_memory
+class UserHub
 {
-	uint32_t status {};
-	std::chrono::steady_clock::duration elapsed{};
+	static std::vector<std::shared_ptr<User>> users;
+public:
+	static uint32_t _register()
+	{
+		//open database conn 
+		//return status
+		if (LR_SUCCESS) // add to server arr
+		{
+
+		}
+		return LR_SUCCESS;
+	}
+	static uint32_t _login()
+	{
+		//open database conn 
+		//return status
+		return LR_SUCCESS;
+	}
+
+	static void reg(std::shared_ptr<User> user)
+	{
+		users.push_back(user);
+		std::cout << "hey registered\n";
+	}
 };
 
 class ClientHandle
 {
 	friend class Server;
+	friend class GameInstanceBase;
+	friend class QuizGame;
+public:
+	const uint32_t this_ID = clientIDCount++;
+	uint8_t connTries = 0;
 private:
-	class Recieve
+	static uint16_t clientIDCount;
+
+	bool disconnected = false;
+	std::shared_mutex generalMutex;
+	asio::ip::udp::endpoint endpoint;
+	std::chrono::steady_clock::time_point lastRecv;
+
+	//Send Section
+	struct SendHandle
 	{
-	public:
-		mutable std::mutex lock;
-		std::list<std::shared_ptr<R_Message>> messages;
-		struct t_mmap
+		struct SendStruct
+		{
+			std::list<std::shared_ptr<Send_Message>>::iterator fastAccess;
+			bool validIterator{};
+		};
+		static SendStruct createSendStruct(const std::list<std::shared_ptr<Send_Message>>::iterator iter);
+		std::shared_mutex sendMutex;
+		std::list<std::shared_ptr<Send_Message>> sendMessages;
+		std::unordered_map<uint64_t, SendStruct> sendMessageMap;
+	};
+	
+	//Recieve Section
+	struct RecvHandle
+	{
+		struct RecvStruct
 		{
 			std::chrono::steady_clock::time_point timepoint;
 			bool ValidIterator;
-			std::list<std::shared_ptr<R_Message>>::iterator fastAccess;
+			std::list<std::shared_ptr<Recv_Message>>::iterator fastAccess{};
 		};
-
-		std::unordered_map<unsigned int, std::shared_ptr<t_mmap>> mmap;
+		static RecvStruct createRecvStruct(std::list<std::shared_ptr<Recv_Message>>::iterator fastAccess, bool validIterator = true);
+		std::shared_mutex recvMutex;
+		std::list<std::shared_ptr<Recv_Message>> recvMessages;
+		std::unordered_map<uint64_t,RecvStruct> recvMessageMap;
 	};
 
-	class Send
+	//Confirm Section
+	struct ConfirmHandle
 	{
+		std::shared_mutex cofirmMutex;
+		std::list<std::shared_ptr<Confirm_Message>> confirmMessages;
+	};
+
+	class GameMsgHandle
+	{
+	private:
+		std::unordered_map<uint32_t, std::shared_ptr<ThreadSafeQueue<Recv_Message>>> gameMessages;
+		std::shared_mutex gLock;
 	public:
-		mutable std::mutex lock;
-		std::list<std::shared_ptr<S_Message>> messages; // optimisation may be good // Priority is missing partly
-		std::unordered_map<unsigned int, std::list<std::shared_ptr<S_Message>>::iterator> mmap;
+		const std::shared_ptr < ThreadSafeQueue<Recv_Message>> getHandle(const uint32_t& key)
+		{
+			std::shared_lock sLock(gLock);
+			auto it = gameMessages.find(key);
+			if (it != gameMessages.end())
+			{
+				return it->second;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+		void add_or_override_Handle(const uint32_t& key)
+		{
+			std::unique_lock uLock(gLock);
+			gameMessages.insert_or_assign(key, std::make_shared<ThreadSafeQueue<Recv_Message>>());
+		}
+		void remove_Handle(const uint32_t& key)
+		{
+			std::unique_lock uLock(gLock);
+			gameMessages.erase(key);
+		}
+	};
 
-		mutable std::mutex c_lock;
-		std::list<std::shared_ptr<C_Message>> cMessage;
-	};
-public:
-	struct RedirectHandler
-	{
-		std::function<void(ClientHandle*, std::shared_ptr<R_Message>)> function;
-		std::shared_ptr< std::shared_ptr<shared_redirect_memory>> data;
-	};
-private:
-	bool stopRequest = false;
+	GameMsgHandle gMsgHandle;
+
 	bool valid = true;
 
-	std::unordered_map<uint32_t, RedirectHandler> redirectMap;
+	std::weak_ptr<ClientHandle> weak_this;
 
-	asio::ip::udp::endpoint endpoint;
-	std::chrono::steady_clock::time_point lastRecv;
-	Recieve recieveHandle;
-	Send sendHandle;
+	SendHandle sendHandle;
+	RecvHandle recvHandle;
+	ConfirmHandle confirmHandle;
+public:
+	std::shared_ptr<User> userInterface;
+private:
 
 public:
 	ClientHandle(const asio::ip::udp::endpoint& endpoint);
 
-	~ClientHandle();
+	void setShared(std::shared_ptr<ClientHandle>);
 
-	void cleanUp();
+	void disconnect();
 
 	void bind();
 
-	std::shared_ptr<S_Message> poll();
+	void addSendMessage(std::shared_ptr<Send_Message> smsg);
 
-	std::shared_ptr<C_Message> pollConfirmation();
+	void addRecvMessage(std::shared_ptr<Recv_Message> msg);
 
-	void registerRedirectFunction(uint32_t redirect_func_id, RedirectHandler rHandler);
+	std::shared_ptr<Send_Message> poll();
 
-	void removeRedirectFunction(uint32_t redirect_func_id);
+	std::shared_ptr<Confirm_Message> c_poll();
 
-	std::shared_ptr<std::shared_ptr<shared_redirect_memory>> _getRedirectMemory(uint32_t redirect_func_id);
-
-	std::function<void(ClientHandle*, std::shared_ptr<R_Message>)> callRedirectFunction(uint32_t redirect_func_id);
-
-	void addNewMessage(std::shared_ptr<S_Message> msg);
+	void confirmMessage(std::shared_ptr<Confirm_Message> msg);
 
 	size_t getSendMessageCount() const noexcept;
 
@@ -89,15 +176,15 @@ public:
 
 	size_t getConfimationMsgCount() const noexcept;
 
-	asio::ip::udp::endpoint getEndpoint() const noexcept;
+	const asio::ip::udp::endpoint& getEndpoint() const noexcept;
 
-	void recieve(std::shared_ptr<R_Message> message);
+	void cleanUp();
 
-	void recieveConfirmation(std::shared_ptr<C_Message> message);
+	void tempCleanUp();
 
-	std::shared_ptr<R_Message> getRecievedMsg();
+	~ClientHandle();
 
-	std::mutex& getRecievedMutex();
+	//TODO some error handling
+	//keep mutex lifetime in mind
 };
-
-extern void bindToServiceHub(ClientHandle* clientHandle);
+#endif 

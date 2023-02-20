@@ -13,24 +13,33 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Network">
+      <UniqueIdentifier>{ebf9ad29-467f-4d4b-baef-356bc0e0d28d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Hubs">
+      <UniqueIdentifier>{a92da706-3d86-46a7-ba55-3b316a4fc5c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game">
+      <UniqueIdentifier>{1a179cf8-4dd8-4042-9732-999be7e01a79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{e633cad9-718e-4b67-bc51-f4c5e26b8011}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClientHandle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ServiceHub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NewServer.cpp">
+    <ClCompile Include="Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NewClientHandle.cpp">
+    <ClCompile Include="ClientHandle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RedirectHub.cpp">
@@ -47,35 +56,32 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientHandle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Testing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ServiceHub.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Message.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="NewClientHandle.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ClientHandle.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="NewServer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Server.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
     <ClInclude Include="RedirectHub.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Hubs</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceHub.h">
+      <Filter>Header Files\Hubs</Filter>
     </ClInclude>
     <ClInclude Include="TaskExecutor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameInstance.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Hubs</Filter>
     </ClInclude>
     <ClInclude Include="ThreadSafeQueue.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Hubs</Filter>
+    </ClInclude>
+    <ClInclude Include="GameInstance.h">
+      <Filter>Header Files\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -16,6 +16,9 @@
 #include <regex>
 #include <fstream>
 
+#include <algorithm>
+#include <random>
+
 #include "asio/include/asio.hpp"
 #include "nlohmann/json.hpp"
 

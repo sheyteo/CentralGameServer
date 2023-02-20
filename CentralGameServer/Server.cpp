@@ -1,4 +1,4 @@
-#include "NewServer.h"
+#include "Server.h"
 
 void Server::ClientHandleMapSection::addClientHandle(const asio::ip::udp::endpoint& endp, std::shared_ptr<ClientHandle> clientHandle)
 {	
