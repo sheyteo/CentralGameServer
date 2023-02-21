@@ -12,10 +12,16 @@ struct GameInstanceInfo
 	static uint32_t counter;
 };
 
-
 class GameInstanceBase
 {
+public:
+	GameInstanceBase() { this_game_id = UINT32_MAX; };
+	GameInstanceBase(const uint32_t& id);
+
+	virtual ~GameInstanceBase() {}
 protected:
+	uint32_t this_game_id;
+
     std::unordered_map<uint32_t,std::weak_ptr<ClientHandle>> clHandle;
     std::shared_mutex clHandleMutex;
     GameInstanceInfo gInfo;
@@ -27,7 +33,6 @@ protected:
 	virtual void _start();
 	virtual void _stop();
 
-	virtual ~GameInstanceBase() {}
 
 public:
 	void start();
@@ -43,10 +48,11 @@ private:
 	static std::shared_mutex gLock;
 	static std::unordered_map<uint32_t, std::shared_ptr<GameInstanceBase>> gameInstances;
 public:
-	static void addGameInstance(const uint32_t& id, std::shared_ptr<GameInstanceBase> qg)
+	template<class T>
+	static void addGameInstance(const uint32_t& id)
 	{
 		std::unique_lock uLock(gLock);
-		gameInstances.insert_or_assign(id, qg);
+		gameInstances.insert_or_assign(id, std::make_shared<T>(id));
 	}
 	static void removeGameInstance(const uint32_t& key)
 	{

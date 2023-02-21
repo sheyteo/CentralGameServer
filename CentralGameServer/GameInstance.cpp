@@ -1,5 +1,10 @@
 #include "GameInstance.h"
 
+GameInstanceBase::GameInstanceBase(const uint32_t& id)
+{
+	this_game_id = id;
+}
+
 void GameInstanceBase::start()
 {
 	mainThread.reset(new std::thread(&GameInstanceBase::_start,this));
@@ -45,7 +50,7 @@ void GameInstanceBase::addCl(std::weak_ptr<ClientHandle> WeakClientHandle)
 	{
 		std::unique_lock ul(clHandleMutex);
 
-		clientHandle->gMsgHandle.add_or_override_Handle(gInfo.ID);
+		clientHandle->gMsgHandle->add_or_override_Handle(gInfo.ID);
 		clHandle.insert_or_assign(clientHandle->this_ID, clientHandle);
 	}
 	else

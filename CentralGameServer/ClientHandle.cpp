@@ -1,36 +1,5 @@
 #include "ClientHandle.h"
 
-User::User(std::weak_ptr<ClientHandle> weakClientHandle)
-	:weakClientHandle(weakClientHandle)
-{
-
-}
-
-//void User::_register(std::shared_ptr<ExtentPtr<ClientHandle>> _,std::shared_ptr<Recv_Message> msg)
-//{
-//	if (msg == nullptr)
-//	{
-//		return;
-//	}
-//	Custom_Message_View::
-//	msg->getData().size();
-//	Send_Message::create({}, Fast_Redirect::create(105, 0, msg->getHeader()->fast_redirect.ClientMemID));
-//	msg->getHeader()->
-//}
-//
-//void User::_login(std::shared_ptr<Recv_Message> msg)
-//{
-//
-//}
-//
-//void User::_ping()
-//{
-//
-//}
-
-
-std::vector<std::shared_ptr<User>> UserHub::users;
-
 ClientHandle::SendHandle::SendStruct ClientHandle::SendHandle::createSendStruct(const std::list<std::shared_ptr<Send_Message>>::iterator iter)
 {
 	SendStruct ss;
@@ -113,7 +82,7 @@ void ClientHandle::addRecvMessage(std::shared_ptr<Recv_Message> msg)
 		else if(msg->getHeader()->gameInstanceID != 0)
 		{
 			std::cout << msg->getHeader()->gameInstanceID << "\n";
-			auto temp = gMsgHandle.getHandle(msg->getHeader()->gameInstanceID);
+			auto temp = gMsgHandle->getHandle(msg->getHeader()->gameInstanceID);
 			if (temp)
 			{
 				temp->push(msg);
@@ -251,6 +220,11 @@ void ClientHandle::cleanUp()
 
 		confirmHandle.confirmMessages.clear();
 	}
+}
+
+std::shared_ptr<ClientHandle::GameMsgHandle> ClientHandle::getGMH() const noexcept
+{
+	return gMsgHandle;
 }
 
 void ClientHandle::tempCleanUp()
@@ -463,6 +437,14 @@ void ClientHandle::disconnect()
 	RedirectHub::removerRedirectFuncs(this_ID);
 }
 
+std::vector<std::shared_ptr<User>> UserHub::users;
+
+User::User(std::weak_ptr<ClientHandle> weakClientHandle)
+	:weakClientHandle(weakClientHandle)
+{
+
+}
+
 void User::_login(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message> msg)
 {
 	if (auto clientHandle = weakClientHandle.lock())
@@ -526,4 +508,13 @@ uint64_t User::ping(std::chrono::milliseconds* ms)
 void User::_fetch_info(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>)
 {
 	return;
+}
+
+const std::string& User::get_username() const
+{
+	if (!loged_in)
+	{
+		throw std::runtime_error("Bad Gateaway, not loged in should not be here\n");
+	}
+	return uname;
 }

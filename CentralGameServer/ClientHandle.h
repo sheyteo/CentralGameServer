@@ -25,6 +25,8 @@ public:
 	void _register(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
 	void _disconnect(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
 	void _fetch_info(std::weak_ptr<ClientHandle> weakClientHandle, std::shared_ptr<Recv_Message>);
+
+	const std::string& get_username() const;
 };
 
 class UserHub
@@ -138,7 +140,7 @@ private:
 		}
 	};
 
-	GameMsgHandle gMsgHandle;
+	std::shared_ptr<GameMsgHandle> gMsgHandle;
 
 	bool valid = true;
 
@@ -177,6 +179,8 @@ public:
 	size_t getConfimationMsgCount() const noexcept;
 
 	const asio::ip::udp::endpoint& getEndpoint() const noexcept;
+
+	std::shared_ptr<ClientHandle::GameMsgHandle> getGMH() const noexcept;
 
 	void cleanUp();
 

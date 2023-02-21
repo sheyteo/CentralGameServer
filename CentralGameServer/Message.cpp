@@ -203,9 +203,30 @@ std::string Custom_Message_View::read_str()
 	return str;
 }
 
+uint64_t Custom_Message_View::read_uint64()
+{
+	uint64_t _num = *((uint64_t*)(_view.data() + offset));
+	offset += sizeof(_num);
+	return _num;
+}
+
 uint32_t Custom_Message_View::read_uint32()
 {
 	uint32_t _num = *((uint32_t*)(_view.data() + offset));
+	offset += sizeof(_num);
+	return _num;
+}
+
+uint16_t Custom_Message_View::read_uint16()
+{
+	uint16_t _num = *((uint16_t*)(_view.data() + offset));
+	offset += sizeof(_num);
+	return _num;
+}
+
+uint8_t Custom_Message_View::read_uint8()
+{
+	uint8_t _num = *((uint8_t*)(_view.data() + offset));
 	offset += sizeof(_num);
 	return _num;
 }

@@ -195,7 +195,10 @@ private:
 public:
 	Custom_Message_View(const std::vector<char>& view);
 	std::string read_str();
+	uint64_t read_uint64();
 	uint32_t read_uint32();
+	uint16_t read_uint16();
+	uint8_t read_uint8();
 	template<class T>
 	const T* read()
 	{
