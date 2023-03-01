@@ -137,18 +137,12 @@
 int main()
 {
 	Server server;
-	GameInstanceSection::addGameInstance<QuizGameInstance>(17);
+	auto gi = GameInstanceSection::addGameInstance<QuizGameInstance>(17);
 	server.start(5,5);
 	std::this_thread::sleep_for(5s);
-	if (auto gi = GameInstanceSection::getGameInstance(17))
-	{
-		gi->start();
-		std::cout << "Started GameInstance\n";
-	}
-	else
-	{
-		std::cout << "Couldnt start GameInstance\n";
-	}
+
+	gi->start();
+	std::cout << "Started GameInstance\n";
 	
 	while (true)
 	{

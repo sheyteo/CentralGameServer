@@ -51,7 +51,35 @@ void QuizGameInstance::_start()
 
 	while (true)
 	{
-		std::this_thread::sleep_for(20ms);
+		//poll new Question
+		QuizGameQuestion q = this->QuizGameQuestions.front();
+		QuizGameQuestions.pop_front();
+		QuizGameQuestions.push_back(q);
+
+
+		//send question to all player
+		Custom_Message cm;
+		q.addToCM(cm);
+		auto sm = Send_Message::create(*cm.getRaw(), Fast_Redirect{}, High_Priotity, Ensured_Importance, this_game_id);
+		send_to_all(sm);
+
+		//wait time
+		std::this_thread::sleep_for(10s);
+		
+		//recv all answers
+		
+		//check answers
+		std::shared_lock sl(clHandleMutex);
+		for (auto& [id, qgpi]: activePlayers)
+		{
+			uint8_t sgpi = qgpi->awnser_index;
+			std::cout << "User " << id << "´s with name "<<qgpi->username<<" answer is " << sgpi << "\n";
+		}
+		
+		std::this_thread::sleep_for(5s);
+
+		//send scores + right answer
+		//wait some time
 	}
 }
 
@@ -63,9 +91,9 @@ void QuizGameInstance::start_recieve_loop()
 
 void QuizGameInstance::_recieve_loop()
 {
-	while (true)
+	while (rLoop_active)
 	{
-		clHandleMutex.lock_shared();
+		std::shared_lock sl(clHandleMutex);
 		for (auto& [id, qgpi]: activePlayers)
 		{
 			std::shared_ptr<ClientHandle> clh;
@@ -108,12 +136,16 @@ void QuizGameInstance::wait_stop_recieve_loop()
 
 void QuizGameInstance::dispatch_msg(std::shared_ptr<Recv_Message> msg, uint32_t id)
 {
+	if (this == nullptr)
+	{
+		return;
+	}
 	Custom_Message_View cmv(msg->getData());
 	uint32_t instruction = cmv.read_uint32();
 	switch (instruction)
 	{
 	case Server_Recv_Answer:
-		ServerRecvAwnser(msg, id);
+		ServerRecvAnswer(msg, id);
 		break;
 	case Server_Send_Leaderboard:
 		break;
@@ -144,7 +176,19 @@ void QuizGameInstance::loadQuestions(const std::string& path)
 	std::cout << "Warning QuizGameInstance::loadQuestions still not implemented\n";
 }
 
-void QuizGameInstance::ServerRecvAwnser(std::shared_ptr<Recv_Message> msg, const uint32_t& ID)
+void QuizGameInstance::send_to_all(std::shared_ptr<Send_Message> msg)
+{
+	std::shared_lock sl(clHandleMutex);
+	for (auto& [id, clh] : clHandle)
+	{
+		if (auto sclh = clh.lock())
+		{
+			sclh->addSendMessage(std::make_shared<Send_Message>(*msg));
+		}
+	}
+}
+
+void QuizGameInstance::ServerRecvAnswer(std::shared_ptr<Recv_Message> msg, const uint32_t& ID)
 {
 	Custom_Message_View cmv(msg->getData());
 	cmv.read_uint32();

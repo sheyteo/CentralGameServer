@@ -49,10 +49,12 @@ private:
 	static std::unordered_map<uint32_t, std::shared_ptr<GameInstanceBase>> gameInstances;
 public:
 	template<class T>
-	static void addGameInstance(const uint32_t& id)
+	static std::shared_ptr<T> addGameInstance(const uint32_t& id)
 	{
 		std::unique_lock uLock(gLock);
-		gameInstances.insert_or_assign(id, std::make_shared<T>(id));
+		std::shared_ptr<T> temp = std::make_shared<T>(id);
+		gameInstances.insert_or_assign(id, temp);
+		return temp;
 	}
 	static void removeGameInstance(const uint32_t& key)
 	{

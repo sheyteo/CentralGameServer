@@ -75,8 +75,9 @@ private:
 
 	void setStartPlayers();
 	void loadQuestions(const std::string& path);
+	void send_to_all(std::shared_ptr<Send_Message> msg);
 
-	void ServerRecvAwnser(std::shared_ptr<Recv_Message>, const uint32_t& ID);
+	void ServerRecvAnswer(std::shared_ptr<Recv_Message>, const uint32_t& ID);
 	void ServerSendLeaderboardRequest(std::shared_ptr<Recv_Message>, const uint32_t& ID);
 	void ServerSendVotesCastedRequest(std::shared_ptr<Recv_Message>, const uint32_t& ID);
 };
