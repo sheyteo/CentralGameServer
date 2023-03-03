@@ -140,6 +140,11 @@ int main()
 	auto gi = GameInstanceSection::addGameInstance<QuizGameInstance>(17);
 	server.start(5,5);
 	std::this_thread::sleep_for(5s);
+	while (gi->getPlayerCount() == 0)
+	{
+		std::this_thread::sleep_for(100ms);
+
+	}
 
 	gi->start();
 	std::cout << "Started GameInstance\n";

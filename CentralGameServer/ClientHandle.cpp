@@ -25,7 +25,7 @@ ClientHandle::ClientHandle(const asio::ip::udp::endpoint& endpoint)
 	{
 		//TaskExecutor::addTask(std::bind(RedirectHub::getFunc(this_ID, 21), sptr_this, nullptr)); //adding keep alive
 	}
-
+	gMsgHandle.reset(new GameMsgHandle{});
 }
 
 void ClientHandle::setShared(std::shared_ptr<ClientHandle> sharedPtr)
@@ -514,7 +514,7 @@ const std::string& User::get_username() const
 {
 	if (!loged_in)
 	{
-		throw std::runtime_error("Bad Gateaway, not loged in should not be here\n");
+		std::cout<<"Bad Gateaway, not loged in should not be here\n";
 	}
 	return uname;
 }

@@ -43,6 +43,11 @@ QuizGameInstance::QuizGameInstance(const uint32_t& id)
 	std::cout << "Should be used 123\n";
 }
 
+uint32_t QuizGameInstance::getPlayerCount()
+{
+	return this->clHandle.size();
+}
+
 void QuizGameInstance::_start()
 {
 	loadQuestions(""); //TODO: insert path for questions, maybe later Database

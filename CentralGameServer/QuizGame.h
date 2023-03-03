@@ -58,6 +58,8 @@ class QuizGameInstance : public GameInstanceBase
 {
 public:
 	QuizGameInstance(const uint32_t& id);
+
+	uint32_t getPlayerCount();
 private:
 	std::list<QuizGameQuestion> QuizGameQuestions;
 	std::unordered_map<uint32_t, std::shared_ptr<QuizGamePlayerInfo>> activePlayers;
