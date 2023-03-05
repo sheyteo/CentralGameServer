@@ -123,6 +123,7 @@ public:
 		Priority priority = Priority::High_Priotity, Importance importance = Importance::High_Importance, uint32_t gameInstanceID = 0);
 
 	std::shared_ptr<std::vector<char>> getRaw();
+	NormalMessageHeader* _getHeader();
 
 	bool check_valid(int future = 0);
 	bool olderThan(std::chrono::steady_clock::duration dur);

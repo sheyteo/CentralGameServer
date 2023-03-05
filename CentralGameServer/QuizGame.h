@@ -12,6 +12,7 @@ enum QuizGameInstructions
 	Client_Update_Votes_casted = 5,
 	Server_Send_Leaderboard = 6,
 	Server_Send_Votes_casted = 7,
+	Client_Recv_Start_Message = 8
 };
 
 enum QuestionTopic

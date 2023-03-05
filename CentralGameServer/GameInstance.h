@@ -40,6 +40,9 @@ public:
 	void waitStop();
     void addCl(std::weak_ptr<ClientHandle>);
     void removeCl(const uint32_t&);
+
+	//changes msg->gameInstanceID
+	void send_to_client(std::shared_ptr<Send_Message>, std::shared_ptr<ClientHandle>);
 };
 
 class GameInstanceSection

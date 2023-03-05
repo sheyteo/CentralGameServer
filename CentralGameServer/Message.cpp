@@ -79,6 +79,11 @@ std::shared_ptr<std::vector<char>> Send_Message::getRaw()
 	return std::make_shared<std::vector<char>>(completeMsg);
 }
 
+NormalMessageHeader* Send_Message::_getHeader()
+{
+	return P_NMH;
+}
+
 bool Send_Message::check_valid(int future)
 {
 	if (P_NMH->Importance == Ensured_Importance)

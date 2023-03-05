@@ -65,6 +65,13 @@ void GameInstanceBase::removeCl(const uint32_t& key)
 	clHandle.erase(key);
 }
 
+void GameInstanceBase::send_to_client(std::shared_ptr<Send_Message> msg, std::shared_ptr<ClientHandle> cl)
+{
+	msg->_getHeader()->fast_redirect = Fast_Redirect{};
+	msg->_getHeader()->gameInstanceID = this_game_id;
+	cl->addSendMessage(msg);
+}
+
 std::shared_mutex GameInstanceSection::gLock;
 std::unordered_map<uint32_t, std::shared_ptr<GameInstanceBase>> GameInstanceSection::gameInstances;
 

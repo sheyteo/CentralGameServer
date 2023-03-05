@@ -28,7 +28,7 @@ QuizGameQuestion QuizGameQuestion::create(const std::string& question, const std
 
 void QuizGameQuestion::addToCM(Custom_Message& customMessage)
 {
-	customMessage.push_back_str("--QUESTION--");
+	customMessage.push_back_ui32(Client_Recv_Question);
 	customMessage.push_back_ui32(topic);
 	customMessage.push_back_str(question);
 	for (auto& [answer, correct] : answers)
@@ -173,6 +173,45 @@ void QuizGameInstance::setStartPlayers()
 			activePlayers.insert_or_assign(id, QuizGamePlayerInfo::create(sclh));
 		}
 	}
+
+	//Creating Start Msg
+	Custom_Message cm;
+
+	//header
+	cm.push_back_ui32(Client_Recv_Start_Message);
+
+	//game name
+	cm.push_back_str(this->gInfo.GameName);
+
+	//player number
+	cm.push_back_ui32(activePlayers.size());
+
+	//player names
+	for (auto& [id, info]: activePlayers)
+	{
+		cm.push_back_str(info->username);		
+	}
+
+	auto msg = Send_Message::create(*cm.getRaw(), Fast_Redirect{}, High_Priotity, Ensured_Importance, this_game_id);
+
+	//Sending Start Message to every participant
+	for (auto& [id, _] : activePlayers)
+	{
+		try
+		{
+			if (auto sclh = clHandle.at(id).lock())
+			{
+				sclh->addSendMessage(msg);
+			}
+		}
+		catch (const std::exception&)
+		{
+			std::cout << "Error in QuizGame.cpp::QuizGameInstance::setStartPlayers()\n";
+		}
+		
+	}
+
+	
 }
 
 void QuizGameInstance::loadQuestions(const std::string& path)
